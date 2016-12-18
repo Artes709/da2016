@@ -1,0 +1,159 @@
+---
+title: "Домашнее задание № 2"
+author: "YASINOVSKY/OSTAPENKO"
+date: '18 декабря 2016 г'
+output: html_document
+---
+#Загрузка и очистка данных
+
+Загрузил данные в датафрейм data.
+```{r}
+data <- read.csv("../data/calif_penn_2011.csv");
+```
+Колличество строк
+```{r}
+nrow(data)
+```
+Колличество столбцов
+```{r}
+ncol(data)
+```
+Производится поиск в каждом столбце na и их подсчет
+```{r}
+colSums(apply(data,c(1,2), is.na))
+```
+Колличество оставшихся строк, после удаления NA с помощью функции na.omit. Было удалено 670 строк.
+```{r}
+nrow(na.omit(data))
+```
+
+#Новые дома
+
+Построена диаграмма рассеяния медианы стоимости домов относительно прцоента новых домов.
+```{r}
+Built_2005 = data[,'Built_2005_or_later']
+Median_house = data[,'Median_house_value']
+plot(Built_2005,Median_house)
+```
+
+Калифорния
+```{r}
+Built_2005_California = data$Built_2005_or_later[data$STATEFP==6]
+Median_house_California = data$Median_house_value[data$STATEFP==6]
+plot(Built_2005_California,Median_house_California)
+```
+
+Пенсильвания
+```{r}
+Built_2005_Pensilvania = data$Built_2005_or_later[data$STATEFP==42]
+Median_house_Pensilvania = data$Median_house_value[data$STATEFP==42]
+plot(Built_2005_Pensilvania,Median_house_Pensilvania)
+```
+
+#Незанятые дома
+
+В датафрейм daya добавил новую колонку vacancy_rate с выше описанным показателем.
+```{r}
+Total = data$Total_units
+Vacant = data$Vacant_units
+data$vacancy_rate = Vacant/Total
+```
+
+Нашел максимум, минимум, среднее значение и медиану.
+```{r}
+max(na.omit(data$vacancy_rate))
+min(na.omit(data$vacancy_rate))
+mean(na.omit(data$vacancy_rate))
+median(na.omit(data$vacancy_rate))
+```
+
+Построил диаграмму уровня найма относительно медаианы стоимости.
+```{r}
+plot(data$vacancy_rate, data$Median_house_value)
+```
+
+#Корреляция
+
+Идет перебор по датафреймам. После чего идет выбор номера строки и добавление в вектор асс. Потом идет поиск медианы через функцию median().
+```{r}
+omit = na.omit(data)
+acc <- c()
+for (tract in 1:nrow(omit)) {
+  if (omit$STATEFP[tract] == 6) {
+    if (omit$COUNTYFP[tract] == 1) {
+      acc <- c(acc, tract)
+    }
+  }
+}
+accmv <- c()
+for (tract in acc) {
+  accmv <- c(accmv, omit[tract,10])
+}
+median(accmv)
+```
+Тот же код.
+```{r}
+median(na.omit(data[which(data$STATEFP==6 & data$COUNTYFP==1),10]))
+```
+Средний процент построенных домовладений в округах (Butte County, Santa Clara, York County)
+```{r}
+mean(na.omit(data[which(data$STATEFP==6 & data$COUNTYFP==7),16]))
+mean(na.omit(data[which(data$STATEFP==6 & data$COUNTYFP==85),16]))
+mean(na.omit(data[which(data$STATEFP==42 & data$COUNTYFP==133),16]))
+```
+Расчет корреляции между медианой стоимости домовладений (Median_house_value) и процентом построенных домов (Built_2005_or_later):
+
+1. Для всего набора данных
+```{r}
+cor(data$Median_house_value, data$Built_2005_or_later, use = "complete.obs")
+```
+2. Для калифорнии
+```{r}
+na = na.omit(data)
+cor(na[which(na$STATEFP==6),10], na[which(na$STATEFP==6),16], use = "complete.obs")
+```
+3. Для Пенсильвании
+```{r}
+na = na.omit(data)
+cor(na[which(na$STATEFP==42),10], na[which(na$STATEFP==42),16], use = "complete.obs")
+```
+4. Для округа Butte Couunty
+```{r}
+na = na.omit(data)
+BT = cor(na[which(na$STATEFP==6 & na$COUNTYFP==7),10], na[which(na$STATEFP==6 & na$COUNTYFP==7),16], use = "complete.obs")
+BT
+```
+5. Для округа Santa Clara
+```{r}
+na = na.omit(data)
+cor(na[which(na$STATEFP==6 & na$COUNTYFP==85),10], na[which(na$STATEFP==6 & na$COUNTYFP==85),16], use = "complete.obs")
+```
+6. Для округа York County
+```{r}
+na = na.omit(data)
+cor(na[which(na$STATEFP==42 & na$COUNTYFP==133),10], na[which(na$STATEFP==42 & na$COUNTYFP==133),16], use = "complete.obs")
+```
+Построил 3 диаграммы медианы стоимсоти домовлдений (Median_house_value) относительно медианы дохода (Median_household_income) для трёх округов.
+
+```{r}
+plot(data[which(data$STATEFP==6 & data$COUNTYFP==7),33], data[which(data$STATEFP==6 & data$COUNTYFP==7),10],col="green",pch=14)
+```
+
+```{r}
+plot(data[which(data$STATEFP==6 & data$COUNTYFP==85),33], data[which(data$STATEFP==6 & data$COUNTYFP==85),10],col="brown",pch=14)
+```
+
+```{r}
+plot(data[which(data$STATEFP==42 & data$COUNTYFP==133),33], data[which(data$STATEFP==42 & data$COUNTYFP==133),10],col="blue",pch=14)
+```
+
+
+
+
+
+
+
+
+
+
+
