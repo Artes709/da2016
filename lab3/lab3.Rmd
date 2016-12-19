@@ -1,0 +1,80 @@
+---
+title: "Лабораторная работа №3"
+author: "YASINOVSKY/OSTAPENKO"
+date: '19 декабря 2016 г '
+output: html_document
+---
+
+```{r}
+data<-readLines("https://raw.githubusercontent.com/SergeyMirvoda/da2016/master/data/forbes.htm")
+length(data)
+sum(nchar(data))
+```
+```{r}
+shablon <- "[$](\\d{1,2}[,]?\\d?)\\s"
+length(grep(shablon,data))
+```
+Напишите код, использовав регулярное выражение из п. 3, и функции regexp и regmatches
+```{r}
+length(regmatches(data,regexpr(shablon,data))) 
+regmatches(data,regexpr(shablon,data))[1] 
+length(regmatches(data,regexpr(shablon,data))[regmatches(data,regexpr(shablon,data))=="$72 "]) 
+
+regmatches(data,regexpr(shablon,data))[3] 
+length(regmatches(data,regexpr(shablon,data))[regmatches(data,regexpr(shablon,data))=="$36 "]) 
+length(regmatches(data,regexpr(shablon,data))[regmatches(data,regexpr(shablon,data))=="$20,5 "]) 
+```
+Задание 2
+```{r}
+col<-nchar(regmatches(data,regexpr(shablon,data))) 
+num<-substr(regmatches(data,regexpr(shablon,data)),2,col-1)
+num2<-sub(",",".",num)
+worths<-as.numeric(num2)*10**9 
+class(worths)
+```
+worths является вектором и в нём сто значений типа double.
+```{r}
+
+typeof(worths)
+length(worths)
+```
+Все элементы вектора worths больше 1 миллиарда.
+```{r}
+el<-worths[worths>10^9]
+length(el)
+```
+Самое большое число это доход Билла Гейтса.
+```{r}
+max(worths)
+```
+Какова медиана ста этих записей?
+```{r}
+median(worths)
+```
+Средний доход?
+```{r}
+mean(worths)
+```
+Как много людей из этого списка имеют доход больше 5млрд., 10, 25?
+```{r}
+length(worths[worths>5*10^9])
+length(worths[worths>10*10^9])
+length(worths[worths>25*10^9])
+```
+Какой их общий доход?
+```{r}
+ob<-sum(worths)
+```
+Какую долю от общего дохода, составляет пятёрка самых богатых.
+```{r}
+sum((worths[1:5])*100/ob)
+```
+Какую долю от общего дохода, составляют 20 самых богатых.
+```{r}
+sum((worths[1:20])*100/ob)
+```
+В данных федерального резерва США найдите показатель дохода всех домохозяйств (Household net worth) в соответвующем году, какую долю общего дохода составляют 100 богатейших людей.
+```{r}
+Hnw<-87.118*10**9 
+100*Hnw/ob
+```
