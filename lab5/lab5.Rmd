@@ -1,0 +1,68 @@
+---
+title: "Лабораторная работа №5"
+author: "YASINOVSKY/OSTAPENKO"
+date: '20 декабря 2016 г '
+output: html_document
+---
+
+данные четырёх первых кошек из набора данных
+```{r}
+library(MASS) 
+data(cats)
+cats4<-data.frame(cats[1:4,])
+```
+Oценки s и a для каждой кошки из выбранных. 
+```{r}
+gamma.estimate <- function(data) {
+  s <- var(data)/mean(data)
+  a <- mean(data)/var(data)/mean(data)
+  return(c(a=a,s=s))
+}
+cat_1<-gamma.estimate(cats4$Hwt[-1]) 
+cat_2<-gamma.estimate(cats4$Hwt[-2])
+cat_3<-gamma.estimate(cats4$Hwt[-3])
+cat_4<-gamma.estimate(cats4$Hwt[-4])
+cat_all<-rbind(cat_1,cat_2,cat_3,cat_4)
+
+sqrt((nrow(cat_all) -1)^2*var(cat_all[,"a"])/nrow(cat_all) )
+sqrt((nrow(cat_all) -1)^2*var(cat_all[,"s"])/nrow(cat_all) )
+```
+Напишите функцию my.gamma.jk(), принимающую вектор и возвращающую стандартные ошибки для a и b. 
+```{r}
+my.gamma.jk<-function(data){
+  param<-data.frame(a=0,s=0)
+ for(i in 1:length(data)){
+   a<-gamma.estimate(data[-i])[1]
+   s<-gamma.estimate(data[-i])[2]
+   param<-rbind(param,data.frame(a=a,s=s))
+ } 
+  n<-nrow(data.frame(param[-1,]))
+  a<-sqrt((nrow(cat_all) -1)^2*var(data.frame(param[-1,])[,"a"])/nrow(cat_all) )
+  s<-sqrt((nrow(cat_all) -1)^2*var(data.frame(param[-1,])[,"s"])/nrow(cat_all) )
+   return(c(err_a=a,err_s=s))
+}
+
+```
+Вызовите написанную функцию для данных из п.2.
+```{r}
+my.gamma.jk(cats4$Hwt) 
+my.gamma.jk(cats$Hwt)  
+```
+Рассчитайте параметры a и s раздельно для кошек и котов. Найдите jackknife SE для полученных параметров (всего 4).
+```{r}
+se_M<-gamma.estimate(cats$Hwt[cats$Sex=="M"] ) 
+dM<-my.gamma.jk(cats$Hwt[cats$Sex=="M"] )
+
+se_F<-gamma.estimate(cats$Hwt[cats$Sex=="F"]) 
+dF<-my.gamma.jk(cats$Hwt[cats$Sex=="F"])
+```
+Рассчитайте разницу оцениваемых параметров между кошками и котами и стандартное отклонение разницы.
+```{r}
+raz_a<-dF[1]-dM[1] 
+raz_s<-dF[2]-dM[2] 
+
+SE_a<-sqrt((se_M[1]^2)+(se_F[1]^2))
+SE_s<-sqrt((se_M[2]^2)+(se_F[2]^2))
+```
+
+Вес сердца кошек зависит от пола

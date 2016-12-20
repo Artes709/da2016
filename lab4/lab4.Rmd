@@ -1,0 +1,86 @@
+---
+title: "Лабораторная работа №4"
+author: "YASINOVSKY/OSTAPENKO"
+date: '20 декабря 2016 г '
+output: html_document
+---
+Загрузите датафрейм cats (посмотреть описание датафрейма можно при помощи команды help(cats)) из пакета MASS, при помощи команд: library(MASS) data(cats).
+```{r}
+library(MASS) 
+data(cats)
+help(cats)
+summary(cats)
+```
+Рассчитайте среднее (mean), среднеквадратичное отклонение (sd) и дисперсию (var) веса кошачьих сердец.
+```{r}
+m<-mean(cats$Hwt) 
+sko<-sd(cats$Hwt) 
+disp<-var(cats$Hwt) 
+```
+
+При помощи полученных значений и формул выше, рассчитайте параметры a и s. Округлите до разумного числа знаков.
+```{r}
+a<-round(m^2/disp,3)
+s<-round(disp/m,3)
+```
+
+Напишите функцию для расчёта параметров a и s через дисперсию и среднее для передаваемого вектора чисел. Данные сходятся.
+```{r}
+my.gamma <- function(x){ 
+  s <- var(x)/mean(x)
+  a <- mean(x)^2/var(x)
+   return(c(a=round(a,3),s=round(s,3)))
+  }
+my.gamma(cats$Hwt) 
+```
+
+Постройте гистограмму весов. 
+```{r}
+hist(cats$Hwt, breaks = 20,probability=T)
+curve(dgamma(x, shape=a,scale=s), add=T)
+```
+
+Получите параметры a и s отдельно для котов и кошек
+```{r}
+M<-my.gamma(cats$Hwt[cats$Sex=="M"])
+a_M<-M[1]
+s_M<-M[2]
+F<-my.gamma(cats$Hwt[cats$Sex=="F"])
+a_F<-F[1]
+s_F<-F[2]
+```
+
+Постройте полученные функции распределения на одном графике, используя curve и dgamma
+```{r}
+hist(cats$Hwt, xlab="Hwt",ylab="colich",breaks = 20, probability =T)
+curve(dgamma(x, shape=a_M,scale=s_M),col="red", add=T)
+curve(dgamma(x, shape=a_F,scale=s_F),col="green", add=T)
+```
+
+Случайным образом разделите данные на две группы одного размера равного количеству котов и кошек соответственно.
+```{r}
+cat_Male <- data.frame(Hwt=cats$Hwt[cats$Sex=="M"])
+cat_Fmale <- data.frame(Hwt=cats$Hwt[cats$Sex=="F"])
+parametrs<-data.frame(a_M=0, a_F=0, s_M=0, s_F=0)
+for(k in 1:6){ 
+n<-sample(30:47,1)  
+Male<-data.frame(Hwt=cat_Male[1:n,])
+Fmale<-data.frame(Hwt=cat_Fmale[1:n,])
+a_M<-my.gamma(Male$Hwt)[1]
+s_M<-my.gamma(Male$Hwt)[2]
+a_F<-my.gamma(Fmale$Hwt)[1]
+s_F<-my.gamma(Fmale$Hwt)[2]
+param<- data.frame(a_M=a_M, a_F=a_F, s_M=s_M, s_F=s_F)
+parametrs<-rbind(parametrs,param)
+}
+parametrs<-parametrs[-1,] 
+```
+
+Найдите среднюю разницу между результатами групп.
+```{r}
+a.raz<-parametrs[,c("a_F")]-parametrs[,c("a_M")]
+s.raz<-parametrs[,c("s_M")]-parametrs[,c("s_F")]
+sredn_raz<-data.frame(a=mean(a.raz), s=mean(s.raz))
+```
+
+На оснвоании полученных распределений можно сделать выводы, что вес сердца у котов больше, чем у кошек
