@@ -1,0 +1,79 @@
+---
+title: "Лабораторная работа №6"
+author: "YASINOVSKY/OSTAPENKO"
+date: '22 декабря 2016 г '
+output: html_document
+---
+
+Прочитайте файл в переменную. На основе полученных данных создайте новую переменную в которой будут следующие колонки (наблюдения): 'Year', 'P99', 'P99.5' и 'P99.9'; это уровни дохода ,которые входят в 99-й, 99.5-й и 99.9 персентиль дохода. Чему равнялся P99 в 1972? P99.5 в 1942? P99.9 в 1922?
+```{r}
+base<-read.csv('https://raw.githubusercontent.com/SergeyMirvoda/da2016/master/lab6/wtid-report.csv')
+datfr<-data.frame(
+  Year=base$Year,
+  P99=base$P99.income.threshold,
+  P99.5=base$P99.5.income.threshold,
+  P99.9=base$P99.9.income.threshold
+  )
+
+datfr$P99[datfr$Year==1972]
+datfr$P99.5[datfr$Year==1942]
+datfr$P99.9[datfr$Year==1922]
+```
+
+Построил диаграмму рассеяний всех трех персентилей относительно времени. 
+```{r}
+plot(datfr$Year,datfr$P99,xlab = 'Year', ylab = 'P99', type = "o")
+plot(datfr$Year,datfr$P99.5,xlab = 'Year', ylab = 'P99.5', type = "o")
+plot(datfr$Year,datfr$P99.9,xlab = 'Year', ylab = 'P99.9', type = "o")
+```
+
+Написал функцию my.exp.estimate_ratio, которая принимает аргументы P99 и P99.9 и возвращает a, рассчитанное по формуле (3)
+```{r}
+my.exp.estimate_ratio<-function(linex,liney){
+  a <- 1 - log(10)/log(linex/liney)
+  return(a)
+}
+
+my.exp.estimate_ratio(10^6,10^7)
+```
+
+Получите значение a для каждого года в наборе данных. Построил графики а относительно годов.
+```{r}
+everyear<-data.frame(
+  Year=datfr$Year,
+  a=my.exp.estimate_ratio(datfr$P99,datfr$P99.9)
+  )
+
+plot(everyear,xlab='Year',ylab='a',type = "o")
+
+plot(datfr$Year,datfr$P99.9,xlab = ' ', ylab = " ",ylim=c(min(datfr$P99,datfr$P99.9),max(datfr$P99,datfr$P99.9)),col='brown',type='o')
+par(new=TRUE)
+plot(everyear,xlab='',ylab='',type='o')
+```
+
+Рассчитал приближенное количество домохозяйств с доходом больше $50 милионов.
+```{r}
+year2012<-everyear$a[everyear$Year=="2012"]
+xmax<-max(datfr[which(datfr$Year=="2012"),seq(2,4,2)])
+par<-(xmax*0.8/xmax)^(-year2012+1)
+```
+
+Написал функцию, которая будет принимать P99.5, P99.9 и a , и вычислять левую часть выражения. Отобразил на графике. Значения равномерны.
+```{r}
+leftzn<-function(P99.5,P99.9,a){return((P99.5/P99.9)^(-a+1))}
+
+plot(datfr$Year,leftzn(datfr$P99.5,datfr$P99.9,everyear$a),type = "o")
+abline(h = 5, col = "brown")
+
+xmag<-leftzn(base$P90.income.threshold,base$P95.income.threshold,everyear$a)
+everyear<-data.frame(
+  Year=datfr$Year,
+  a=my.exp.estimate_ratio(base$P90.income.threshold,base$P95.income.threshold)
+  )
+```
+
+Тоже самое верно и для: (P90/P95)^(-a+1) = 2. Повторите предыдущее для этой формулы. Значения подгонок разные.
+```{r}
+plot(datfr$Year,xmag,type = "o")
+abline(h = 2, col = "red")
+```
